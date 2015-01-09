@@ -6,6 +6,7 @@ var request = Bluebird.promisify(require('request'));
   //comes in as address string
   //goes out as lat and lng
 function geocodeGoogleAPIRequest(req, clientRes){
+  console.log('geocode request received!');
   var addressString = req.query.address;
   var formattedAddress = addressString.split(' ').join('+');
   var apiUrl = 'https://maps.googleapis.com/maps/api/geocode/json?address='; 
@@ -38,16 +39,17 @@ function geocodeGoogleAPIRequest(req, clientRes){
 
 
 function reverseGeocodeGoogleAPIRequest(req, clientRes){
+  console.log('reverse geocode request received!');
   var formattedCoords = req.query.lat+','+req.query.lng;
   var apiUrl = 'https://maps.googleapis.com/maps/api/geocode/json?latlng=';
   var reqUrl =  apiUrl + formattedCoords + '&key=' + process.env.GOOGLE_GEOCODING_API_KEY;
   return request(reqUrl)
   .then(function(googleRes){
-    if (res.statusCode >= 400) {
-      console.log(res.statusCode + ' error on request to Geocoding API');
+    if (googleRes.statusCode >= 400) {
+      console.log(googleRes.statusCode + ' error on request to Geocoding API');
       clientRes.status(400).json('error on request to Geocoding API');
     } else {
-      var address = JSON.parse(res[0].body).results[0].formatted_address;
+      var address = JSON.parse(googleRes[0].body).results[0].formatted_address;
       address = address.split(',');
       address[2] = address[2].split(' ');
       addressParams = {
