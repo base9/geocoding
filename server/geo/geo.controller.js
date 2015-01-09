@@ -1,11 +1,18 @@
 var Bluebird = require('bluebird');
 var request = Bluebird.promisify(require('request'));
+var crontab = require('node-crontab');
 
 //these variables are used by the throttler
 var queue = [];
 var isAsleep = true;
-var interval = 250;
+var REQUEST_INTERVAL = 201;
+var REQUESTS_DAILY_LIMIT = 2499;
+var requestsToday = 0;
 
+var cronJob = crontab.scheduleJob("0 0 * * *", function () {
+  console.log("****************it's cron time!******************");
+  requestsToday = 0;
+});
 
 //geocoding request:
   //comes in as address string
@@ -21,7 +28,12 @@ function geocodeGoogleAPIRequest(req, clientRes){
   var apiUrl = 'https://maps.googleapis.com/maps/api/geocode/json?address='; 
   var reqUrl =  apiUrl + formattedAddress + '&key=' + process.env.GOOGLE_GEOCODING_API_KEY;
 
-  enqueueRequest(sendGeocodeRequest, req, reqUrl, clientRes);
+  if(requestsToday < REQUESTS_DAILY_LIMIT){
+    enqueueRequest(sendGeocodeRequest, req, reqUrl, clientRes);
+    requestsToday++;
+  } else {
+    clientRes.status(400).json('sorry, too many requests today.');
+  }
 }
 
 //reverse geocoding request:
@@ -37,7 +49,12 @@ function reverseGeocodeGoogleAPIRequest(req, clientRes){
   var apiUrl = 'https://maps.googleapis.com/maps/api/geocode/json?latlng=';
   var reqUrl =  apiUrl + formattedCoords + '&key=' + process.env.GOOGLE_GEOCODING_API_KEY;
   
-  enqueueRequest(sendReverseGeocodeRequest, req, reqUrl, clientRes);
+  if(requestsToday < REQUESTS_DAILY_LIMIT){
+    enqueueRequest(sendReverseGeocodeRequest, req, reqUrl, clientRes);
+    requestsToday++;
+  } else {
+    clientRes.status(400).json('sorry, too many requests today.');
+  }
 }
 
 
@@ -90,7 +107,7 @@ function invokeFromQueue(){
     var fn = next[0];
     var args = next[1];
     fn.apply(null,args);
-    setTimeout(invokeFromQueue,interval);
+    setTimeout(invokeFromQueue,REQUEST_INTERVAL);
   } else {
     isAsleep = true;
   }
