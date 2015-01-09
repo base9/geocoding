@@ -1,6 +1,3 @@
-//requirements up here
-
-
 
 //geocoding request:
   //comes in as address string
@@ -58,4 +55,9 @@ function parseGoogleAPIAddress(res){
     };   
     return addressParams;
   }
+}
+
+module.exports = {
+  geocode: geocodeGoogleAPIRequest,
+  reverseGeocode: reverseGeocodeGoogleAPIRequest
 }
