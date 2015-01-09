@@ -1,0 +1,17 @@
+.DS_Store
+
+bower_components/*
+
+node_modules/*
+
+client/assets/**/*
+
+db.sqlite
+
+npm-debug.log
+
+bin/*
+
+lib/*
+
+api_keys.js

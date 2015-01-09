@@ -1,0 +1,11 @@
+{
+  "name": "geocoding",
+  "version": "1.0.0",
+  "description": "Add markdown-formatted readme here",
+  "main": "api_keys.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
