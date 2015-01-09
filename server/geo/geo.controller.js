@@ -1,5 +1,8 @@
 var Bluebird = require('bluebird');
 var request = Bluebird.promisify(require('request'));
+var queue = [];
+var isAsleep = true;
+var interval = 250;
 
 
 //geocoding request:
@@ -35,15 +38,52 @@ function geocodeGoogleAPIRequest(req, clientRes){
 //reverse geocoding request:
   //comes in as lat and lng
   //goes out as address object
-
-
-
 function reverseGeocodeGoogleAPIRequest(req, clientRes){
   console.log('reverse geocode request received!');
   var formattedCoords = req.query.lat+','+req.query.lng;
   var apiUrl = 'https://maps.googleapis.com/maps/api/geocode/json?latlng=';
   var reqUrl =  apiUrl + formattedCoords + '&key=' + process.env.GOOGLE_GEOCODING_API_KEY;
-  return request(reqUrl)
+  
+  enqueueRequest(sendReverseGeocodeRequest, req, reqUrl, clientRes);
+
+}
+
+
+function invokeFromQueue(){
+  if(queue.length){
+    isAsleep = false;
+    var next = queue.shift();
+    var fn = next[0];
+    var args = next[1];
+    fn.apply(null,args);
+    setTimeout(invokeFromQueue,interval);
+  } else {
+    isAsleep = true;
+  }
+}
+
+function enqueueRequest(fn){
+  var args = Array.prototype.slice.call(arguments,1);
+  queue.push([fn,args]);
+  if(isAsleep){
+    invokeFromQueue();
+  }
+};
+
+// throttledRequestHandler(hiMary);
+// throttledRequestHandler(hiMary);
+// throttledRequestHandler(hiJoe);
+// throttledRequestHandler(hiJoe);
+// function hiMary(){
+//   console.log('hi, mary.');
+// }
+// function hiJoe(){
+//   console.log('hi, Joe.');
+// }
+
+
+function sendReverseGeocodeRequest(req, reqUrl, clientRes){
+  request(reqUrl)
   .then(function(googleRes){
     if (googleRes.statusCode >= 400) {
       console.log(googleRes.statusCode + ' error on request to Geocoding API');
@@ -63,6 +103,17 @@ function reverseGeocodeGoogleAPIRequest(req, clientRes){
     }
   });
 }
+
+
+
+
+
+
+
+
+
+
+
 
 
 
